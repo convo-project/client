@@ -1,0 +1,83 @@
+@import url("./reset.css");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    cursor: default;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    font-size: 62.5%;
+  }
+
+  body {
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    min-width: 320px;
+    min-height: 100vh;
+    font-size: 1.6rem;
+    font-family:
+      "Pretendard",
+      -Inter,
+      system-ui,
+      Avenir,
+      Helvetica,
+      Arial,
+      sans-serif;
+    font-weight: 400;
+  }
+
+  input {
+    outline: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overflow: -moz-scrollbars-none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  @font-face {
+    font-family: Pretendard;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/Pretendard-Regular.woff") format("woff");
+  }
+
+  @font-face {
+    font-family: Pretendard;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/fonts/Pretendard-Medium.woff") format("woff");
+  }
+
+  @font-face {
+    font-family: Pretendard;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/fonts/Pretendard-SemiBold.woff") format("woff");
+  }
+
+  @font-face {
+    font-family: Pretendard;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/fonts/Pretendard-Bold.woff") format("woff");
+  }
+}
