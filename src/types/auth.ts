@@ -3,4 +3,5 @@ export type TAuthForm = {
   password: string;
   nickname?: string;
   passwordCheck?: string;
+  emailVerification?: string;
 };

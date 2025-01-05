@@ -21,7 +21,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-[100px] w-full m-auto px-[100px]">
+    <div className="flex flex-col items-center justify-center gap-[80px] w-full m-auto px-[100px]">
       <img src={Logo} alt="로고" className="w-[250px] h-[100px]" />
       <form
         className="flex flex-col items-center justify-center flex-1 w-full gap-20"
