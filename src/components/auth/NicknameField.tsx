@@ -1,14 +1,8 @@
 import Input from "../common/Input";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
-import { TRegisterForm } from "../../types/auth";
+import { TAuthForm } from "../../types/auth";
 
-const EmailField = ({
-  register,
-  errors,
-}: {
-  register: UseFormRegister<TRegisterForm>;
-  errors: FieldErrors<TRegisterForm>;
-}) => {
+const EmailField = ({ register, errors }: { register: UseFormRegister<TAuthForm>; errors: FieldErrors<TAuthForm> }) => {
   return (
     <div className="w-full">
       <Input
@@ -22,6 +16,7 @@ const EmailField = ({
             message: "닉네임은 최대 10자입니다.",
           },
         })}
+        autoComplete="nickname"
       />
       {errors.nickname?.message && <span className="ml-2 text-[14px] text-rose-400">{errors.nickname?.message}</span>}
     </div>

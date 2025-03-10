@@ -31,6 +31,7 @@ const PasswordField = ({
               message: "영어, 숫자, 특수문자를 조합하여 8자리 이상 입력해주세요.",
             },
           })}
+          autoComplete="current-password"
         />
         <button
           type="button"
