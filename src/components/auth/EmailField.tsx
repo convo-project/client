@@ -1,10 +1,12 @@
 import Input from "../common/Input";
 import { EMAIL_REGEXP } from "../../constants/regexp";
-import { FieldErrors, UseFormRegister } from "react-hook-form";
+import { FieldErrors, useFormContext, UseFormRegister } from "react-hook-form";
 import { TAuthForm } from "../../types/auth";
 import Button from "../common/Button";
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import useTimer from "../../hooks/useTimer";
+import { confirmVerificationCode, sendVerificationCode } from "../../services/register";
+import { initialState, verificationReducer } from "../../utils/verificationReducer";
 
 const EmailField = ({
   register,
@@ -15,17 +17,48 @@ const EmailField = ({
   errors: FieldErrors<TAuthForm>;
   isRegister?: Boolean;
 }) => {
-  const [isVerifyCheckButtonClick, setIsVerifyCheckButtonClick] = useState<boolean>(false);
-  const [verifiedEmailError, setVerifiedEmailError] = useState<string | null>(null);
-  const { minutes, remainingSeconds, isFinished, start } = useTimer(30 * 60);
+  const [isVerificationRequested, setIsVerificationRequested] = useState<boolean>(false);
+  const [state, dispatch] = useReducer(verificationReducer, initialState);
+  const { minutes, remainingSeconds, isFinished, start } = useTimer(10 * 60);
+  const { getValues } = useFormContext<TAuthForm>();
 
-  const handleCheckVerifiedEmail = async () => {
+  const { verificationError, verificationSuccess } = state;
+
+  const handleSendVerificationCode = async () => {
+    const email = getValues("email");
     try {
-      setIsVerifyCheckButtonClick(true);
-      start();
-      setVerifiedEmailError(null);
+      const response = await sendVerificationCode(email);
+
+      if (response?.status === 200) {
+        dispatch({ type: "SET_SUCCESS", payload: "인증 코드가 성공적으로 발송되었습니다." });
+        start();
+        setIsVerificationRequested(true);
+      } else {
+        dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 데 실패했습니다." });
+        setIsVerificationRequested(false);
+      }
     } catch (err) {
-      console.error(err);
+      dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 중에 오류가 발생했습니다." });
+    }
+  };
+
+  const handleConfirmVerificationCode = async () => {
+    const { email, verifyCode } = getValues();
+
+    if (!email || !verifyCode) {
+      dispatch({ type: "SET_ERROR", payload: "이메일 또는 인증 코드가 입력되지 않았습니다." });
+      return;
+    }
+
+    try {
+      const response = await confirmVerificationCode({ email, verifyCode });
+      if (response?.status === 200) {
+        dispatch({ type: "SET_SUCCESS", payload: "인증이 성공적으로 완료되었습니다." });
+      } else {
+        dispatch({ type: "SET_ERROR", payload: "인증 코드가 유효하지 않습니다." });
+      }
+    } catch (err) {
+      dispatch({ type: "SET_ERROR", payload: "인증 확인 중 오류가 발생했습니다." });
     }
   };
 
@@ -47,25 +80,32 @@ const EmailField = ({
             autoComplete="username"
           />
           {isRegister && (
-            <Button variant="filled" type="button" addStyle="w-[100px]" onClick={handleCheckVerifiedEmail}>
-              {isVerifyCheckButtonClick ? "재전송" : "인증 요청"}
+            <Button variant="filled" type="button" addStyle="w-[100px]" onClick={handleSendVerificationCode}>
+              {isVerificationRequested ? "재전송" : "인증 요청"}
             </Button>
           )}
         </div>
-        {(errors.email?.message || verifiedEmailError) && (
-          <span className="ml-2 text-[14px] text-rose-400">{errors.email?.message || verifiedEmailError}</span>
+        {(errors.email?.message || verificationError) && (
+          <span className="ml-2 text-[14px] text-rose-400">
+            {errors.email?.message || verificationError || verificationSuccess}
+          </span>
         )}
       </div>
-      {isVerifyCheckButtonClick && (
+      {isVerificationRequested && (
         <div className="flex flex-col gap-1 mb-5">
-          <Input
-            type="text"
-            name="emailVerification"
-            placeholder="인증 코드를 입력해 주세요."
-            register={register("emailVerification", {
-              required: true,
-            })}
-          />
+          <div className="flex gap-10">
+            <Input
+              type="text"
+              name="verifyCode"
+              placeholder="인증 코드를 입력해 주세요."
+              register={register("verifyCode", {
+                required: true,
+              })}
+            />
+            <Button variant="filled" type="button" addStyle="w-[100px]" onClick={handleConfirmVerificationCode}>
+              확인
+            </Button>
+          </div>
           <div className="flex justify-between text-[12px]">
             <p className="ml-2 text-gray-400 ">이메일이 수신되지 않았다면 스팸 메일함을 확인해 주세요.</p>
             <p className="font-medium text-indigo-900">

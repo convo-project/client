@@ -3,5 +3,11 @@ export type TAuthForm = {
   password: string;
   nickname?: string;
   passwordCheck?: string;
-  emailVerification?: string;
+  verifyCode?: string;
+  isVerified?: boolean;
+};
+
+export type TEmailVerification = {
+  email: string;
+  verifyCode: string;
 };
