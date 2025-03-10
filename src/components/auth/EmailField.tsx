@@ -3,9 +3,9 @@ import { EMAIL_REGEXP } from "../../constants/regexp";
 import { FieldErrors, useFormContext, UseFormRegister } from "react-hook-form";
 import { TAuthForm } from "../../types/auth";
 import Button from "../common/Button";
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import useTimer from "../../hooks/useTimer";
-import { confirmVerificationCode, sendVerificationCode } from "../../services/register";
+import { sendVerificationCode } from "../../services/register";
 import { initialState, verificationReducer } from "../../utils/verificationReducer";
 
 const EmailField = ({
@@ -24,41 +24,31 @@ const EmailField = ({
 
   const { verificationError, verificationSuccess } = state;
 
+  useEffect(() => {
+    if (isFinished) {
+      setIsVerificationRequested(false);
+    }
+  }, [isFinished]);
+
   const handleSendVerificationCode = async () => {
     const email = getValues("email");
     try {
       const response = await sendVerificationCode(email);
+      console.log("Response received:", response);
 
       if (response?.status === 200) {
         dispatch({ type: "SET_SUCCESS", payload: "인증 코드가 성공적으로 발송되었습니다." });
         start();
         setIsVerificationRequested(true);
-      } else {
-        dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 데 실패했습니다." });
+      }
+    } catch (err: any) {
+      if (err.response && err.response.status === 400) {
+        const errorMessage = err.response.data?.message || "이미 존재하는 이메일입니다.";
+        dispatch({ type: "SET_ERROR", payload: errorMessage });
         setIsVerificationRequested(false);
-      }
-    } catch (err) {
-      dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 중에 오류가 발생했습니다." });
-    }
-  };
-
-  const handleConfirmVerificationCode = async () => {
-    const { email, verifyCode } = getValues();
-
-    if (!email || !verifyCode) {
-      dispatch({ type: "SET_ERROR", payload: "이메일 또는 인증 코드가 입력되지 않았습니다." });
-      return;
-    }
-
-    try {
-      const response = await confirmVerificationCode({ email, verifyCode });
-      if (response?.status === 200) {
-        dispatch({ type: "SET_SUCCESS", payload: "인증이 성공적으로 완료되었습니다." });
       } else {
-        dispatch({ type: "SET_ERROR", payload: "인증 코드가 유효하지 않습니다." });
+        dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 중에 오류가 발생했습니다." });
       }
-    } catch (err) {
-      dispatch({ type: "SET_ERROR", payload: "인증 확인 중 오류가 발생했습니다." });
     }
   };
 
@@ -80,7 +70,12 @@ const EmailField = ({
             autoComplete="username"
           />
           {isRegister && (
-            <Button variant="filled" type="button" addStyle="w-[100px]" onClick={handleSendVerificationCode}>
+            <Button
+              variant="filled"
+              type="button"
+              addStyle="w-[100px]"
+              onClick={handleSendVerificationCode}
+              disabled={!EMAIL_REGEXP.test(getValues("email")) || (isVerificationRequested && !isFinished)}>
               {isVerificationRequested ? "재전송" : "인증 요청"}
             </Button>
           )}
@@ -102,12 +97,9 @@ const EmailField = ({
                 required: true,
               })}
             />
-            <Button variant="filled" type="button" addStyle="w-[100px]" onClick={handleConfirmVerificationCode}>
-              확인
-            </Button>
           </div>
           <div className="flex justify-between text-[12px]">
-            <p className="ml-2 text-gray-400 ">이메일이 수신되지 않았다면 스팸 메일함을 확인해 주세요.</p>
+            <p className="ml-2 text-gray-400">이메일이 수신되지 않았다면 스팸 메일함을 확인해 주세요.</p>
             <p className="font-medium text-indigo-900">
               {isFinished
                 ? "00:00"

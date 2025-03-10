@@ -6,6 +6,8 @@ import EmailField from "../../components/auth/EmailField";
 import NicknameField from "../../components/auth/NicknameField";
 import PasswordField from "../../components/auth/PasswordField";
 import PasswordCheckField from "../../components/auth/PasswordCheckField";
+import { confirmVerificationCode, registerUser } from "../../services/register";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterPage() {
   const methods = useForm<TAuthForm>({
@@ -26,9 +28,40 @@ export default function RegisterPage() {
     formState: { errors, isValid },
   } = methods;
 
-  const onSubmit = (data: TAuthForm) => {
-    const { passwordCheck, ...filteredData } = data;
-    console.log("폼 제출 데이터:", filteredData);
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: TAuthForm) => {
+    const { email, passwordCheck, verifyCode, nickname, password } = data;
+
+    if (verifyCode) {
+      try {
+        const confirmResponse = await confirmVerificationCode({ email, verifyCode });
+
+        if (confirmResponse?.status === 200) {
+          const registerData = {
+            email,
+            password,
+            passwordCheck,
+            nickname,
+            isVerified: true,
+          };
+
+          const registerResponse = await registerUser(registerData);
+          if (registerResponse?.status === 200 || registerResponse?.status === 201) {
+            alert("회원가입이 완료되었습니다.");
+            navigate("/");
+          } else {
+            alert("회원가입에 실패하였습니다.");
+          }
+        } else {
+          alert("인증 코드가 유효하지 않습니다.");
+        }
+      } catch (err) {
+        alert("인증 확인 중 오류가 발생했습니다.");
+      }
+    } else {
+      alert("인증 코드가 필요합니다.");
+    }
   };
 
   return (
