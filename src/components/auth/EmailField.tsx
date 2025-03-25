@@ -5,7 +5,7 @@ import { TAuthForm } from "../../types/auth";
 import Button from "../common/Button";
 import { useEffect, useReducer, useState } from "react";
 import useTimer from "../../hooks/useTimer";
-import { sendVerificationCode } from "../../services/register";
+import { sendVerificationCode } from "../../services/auth/register";
 import { initialState, verificationReducer } from "../../utils/verificationReducer";
 
 const EmailField = ({
@@ -23,6 +23,7 @@ const EmailField = ({
   const { getValues } = useFormContext<TAuthForm>();
 
   const { verificationError, verificationSuccess } = state;
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isFinished) {
@@ -32,9 +33,9 @@ const EmailField = ({
 
   const handleSendVerificationCode = async () => {
     const email = getValues("email");
+    setIsLoading(true);
     try {
       const response = await sendVerificationCode(email);
-      console.log("Response received:", response);
 
       if (response?.status === 200) {
         dispatch({ type: "SET_SUCCESS", payload: "인증 코드가 성공적으로 발송되었습니다." });
@@ -49,6 +50,8 @@ const EmailField = ({
       } else {
         dispatch({ type: "SET_ERROR", payload: "인증 코드를 보내는 중에 오류가 발생했습니다." });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -80,9 +83,9 @@ const EmailField = ({
             </Button>
           )}
         </div>
-        {(errors.email?.message || verificationError) && (
-          <span className="ml-2 text-[14px] text-rose-400">
-            {errors.email?.message || verificationError || verificationSuccess}
+        {(errors.email?.message || verificationError || isLoading) && (
+          <span className={`ml-2 text-[14px]  ${isLoading ? "text-indigo-900" : "text-rose-400"}`}>
+            {errors.email?.message || verificationError || verificationSuccess || (isLoading && "인증코드 전송 중...")}
           </span>
         )}
       </div>
